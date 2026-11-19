@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>월평초 3학년 1반 스케치북</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            touch-action: none; /* 크롬북 터치/펜 조작 시 화면 스크롤 방지 */
+        }
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 스크롤바 차단 */
+            font-family: 'Nanum Gothic', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #fffbe2;
+        }
+        .font-gaegu {
+            font-family: 'Gaegu', cursive;
+        }
+        /* 스케치북 종이 효과 */
+        .sketchbook-paper {
+            background-color: #ffffff;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.03), 0 8px 20px rgba(0,0,0,0.08);
+        }
+        /* 스프링 제본 장식 */
+        .spring-binder {
+            background: repeating-linear-gradient(
+                90deg,
+                #374151 0px,
+                #374151 10px,
+                #9ca3af 13px,
+                #e5e7eb 16px,
+                transparent 16px,
+                transparent 28px
+            );
+        }
+        /* 도구 선택 애니메이션 */
+        .tool-btn {
+            transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .tool-btn:hover {
+            transform: scale(1.05);
+        }
+        .tool-btn.active {
+            transform: scale(1.08);
+            border-width: 3px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        /* 색상 단추 애니메이션 */
+        .color-btn {
+            transition: transform 0.15s ease;
+        }
+        .color-btn:hover {
+            transform: scale(1.2);
+        }
+        .color-btn.active {
+            transform: scale(1.25);
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen h-[100dvh] w-screen text-gray-800 p-2 md:p-3 gap-2">
+
+    <!-- 상단 해더 (컴팩트 높이 설정) -->
+    <header class="bg-gradient-to-r from-pink-400 via-amber-300 to-sky-400 rounded-2xl p-2 px-4 shadow-md flex justify-between items-center shrink-0 border-2 border-white">
+        <div class="flex items-center space-x-2">
+            <div class="bg-white/90 p-1.5 rounded-xl shadow-inner text-yellow-500 text-xl md:text-2xl">
+                <i class="fa-solid fa-palette"></i>
+            </div>
+            <h1 class="text-xl md:text-2xl font-extrabold text-white drop-shadow-sm font-gaegu tracking-wider">
+                월평초 3학년 1반 스케치북
+            </h1>
+        </div>
+
+        <!-- 액션 버튼 (Undo, Redo, Clear, Save) -->
+        <div class="flex items-center space-x-1.5 md:space-x-2">
+            <!-- 사진 업로드 버튼 및 숨겨진 파일 인풋 -->
+            <input type="file" id="image-upload" accept="image/*" class="hidden">
+            <button id="btn-upload" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-xl shadow-sm border border-indigo-200 flex items-center space-x-1 text-xs md:text-sm active:scale-95" title="사진 불러오기">
+                <i class="fa-solid fa-image"></i>
+                <span class="hidden sm:inline">사진넣기</span>
+            </button>
+
+            <button id="btn-undo" class="bg-white hover:bg-amber-50 text-amber-600 font-bold px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-xl shadow-sm border border-amber-200 flex items-center space-x-1 text-xs md:text-sm active:scale-95 disabled:opacity-40" title="되돌리기">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span class="hidden sm:inline">이전</span>
+            </button>
+            <button id="btn-redo" class="bg-white hover:bg-amber-50 text-amber-600 font-bold px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-xl shadow-sm border border-amber-200 flex items-center space-x-1 text-xs md:text-sm active:scale-95 disabled:opacity-40" title="다시 실행">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span class="hidden sm:inline">다음</span>
+            </button>
+            <button id="btn-clear" class="bg-rose-100 hover:bg-rose-200 text-rose-600 font-bold px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-xl shadow-sm border border-rose-200 flex items-center space-x-1 text-xs md:text-sm active:scale-95" title="모두 지우기">
+                <i class="fa-solid fa-trash-can"></i>
+                <span class="hidden sm:inline">지우기</span>
+            </button>
+            <button id="btn-download" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl shadow-md border border-emerald-300 flex items-center space-x-1 text-xs md:text-sm active:scale-95" title="저장하기">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>저장</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 (크롬북 한 화면에 딱 차는 플렉스 레이아웃) -->
+    <main class="flex-1 flex flex-col md:flex-row gap-2 min-h-0 w-full overflow-hidden">
+
+        <!-- 좌측/상단 도구 사이드바 -->
+        <aside class="w-full md:w-64 bg-white/90 backdrop-blur-md rounded-2xl p-2.5 shadow-lg border-2 border-yellow-200 flex flex-col justify-between shrink-0 overflow-y-auto gap-2">
+            
+            <!-- 1. 도구 선택 -->
+            <div>
+                <h2 class="text-sm font-bold text-gray-700 mb-1.5 flex items-center gap-1 font-gaegu text-base">
+                    <i class="fa-solid fa-wand-magic-sparkles text-pink-500"></i> 그리기 도구
+                </h2>
+                <div class="grid grid-cols-4 md:grid-cols-3 gap-1.5">
+                    <button data-tool="pencil" class="tool-btn active bg-slate-50 border-slate-400 text-slate-700 p-1.5 rounded-xl flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-pencil text-lg"></i>
+                        <span class="text-[11px] font-bold mt-0.5">연필</span>
+                    </button>
+                    <button data-tool="colorPencil" class="tool-btn bg-amber-50 border-amber-400 text-amber-700 p-1.5 rounded-xl flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-paint-brush text-lg"></i>
+                        <span class="text-[11px] font-bold mt-0.5">색연필</span>
+                    </button>
+                    <button data-tool="marker" class="tool-btn bg-blue-50 border-blue-400 text-blue-700 p-1.5 rounded-xl flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-pen-nib text-lg"></i>
+                        <span class="text-[11px] font-bold mt-0.5">싸인펜</span>
+                    </button>
+                    <button data-tool="crayon" class="tool-btn bg-orange-50 border-orange-400 text-orange-700 p-1.5 rounded-xl flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-eraser rotate-180 text-lg"></i>
+                        <span class="text-[11px] font-bold mt-0.5">크레파스</span>
+                    </button>
+                    <button data-tool="watercolor" class="tool-btn bg-cyan-50 border-cyan-400 text-cyan-700 p-1.5 rounded-xl flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-droplet text-lg"></i>
+                        <span class="text-[11px] font-bold mt-0.5">수채화붓</span>
+                    </button>
+                    <button data-tool="oilPaint" class="tool-btn bg-purple-50 border-purple-400 text-purple-700 p-1.5 rounded-xl flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-paintbrush text-lg"></i>
+                        <span class="text-[11px] font-bold mt-0.5">유화붓</span>
+                    </button>
+                    <button data-tool="bucket" class="tool-btn bg-emerald-50 border-emerald-400 text-emerald-700 p-1.5 rounded-xl flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-fill-drip text-lg"></i>
+                        <span class="text-[11px] font-bold mt-0.5">채우기</span>
+                    </button>
+                    <button data-tool="eraser" class="tool-btn bg-pink-50 border-pink-400 text-pink-600 p-1.5 rounded-xl flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-eraser text-lg"></i>
+                        <span class="text-[11px] font-bold mt-0.5">지우개</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. 선 두께 조절 -->
+            <div class="bg-yellow-50/80 p-2 rounded-xl border border-yellow-200">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs font-bold text-gray-700 font-gaegu text-base">
+                        <i class="fa-solid fa-ruler-horizontal text-amber-500"></i> 두께
+                    </span>
+                    <span id="brush-size-text" class="text-[10px] font-bold bg-white px-2 py-0.5 rounded-full border border-yellow-300 text-amber-800">10px</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="range" id="brush-size" min="2" max="60" value="10" class="w-full h-2 bg-yellow-200 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                    <div class="w-8 h-8 bg-white rounded-lg border border-yellow-300 flex items-center justify-center shrink-0">
+                        <div id="brush-preview" class="bg-black rounded-full transition-all duration-100" style="width: 10px; height: 10px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 색상 팔레트 -->
+            <div class="flex flex-col">
+                <h2 class="text-sm font-bold text-gray-700 mb-1.5 flex items-center gap-1 font-gaegu text-base">
+                    <i class="fa-solid fa-palette text-purple-500"></i> 색상 선택
+                </h2>
+                <div class="grid grid-cols-5 md:grid-cols-5 gap-1.5 mb-2">
+                    <button class="color-btn active w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm ring-2 ring-gray-400" style="background-color: #ef4444;" data-color="#ef4444"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #f97316;" data-color="#f97316"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #eab308;" data-color="#eab308"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #22c55e;" data-color="#22c55e"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #06b6d4;" data-color="#06b6d4"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #3b82f6;" data-color="#3b82f6"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #a855f7;" data-color="#a855f7"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #ec4899;" data-color="#ec4899"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #78350f;" data-color="#78350f"></button>
+                    <button class="color-btn w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white shadow-sm" style="background-color: #18181b;" data-color="#18181b"></button>
+                </div>
+
+                <div class="bg-purple-50 p-1.5 rounded-xl border border-purple-200 flex items-center justify-between">
+                    <span class="text-xs font-bold text-purple-700">원하는 색 직접 고르기</span>
+                    <input type="color" id="custom-color-picker" value="#ef4444" class="w-6 h-6 rounded cursor-pointer border-0 bg-transparent p-0">
+                </div>
+            </div>
+        </aside>
+
+        <!-- 오른쪽 스케치북 메인 캔버스 영역 (화면 전체를 꽉 채움) -->
+        <section class="flex-1 relative flex flex-col sketchbook-paper rounded-2xl p-2 md:p-3 border-2 border-amber-200/80 min-h-0 min-w-0">
+            <!-- 스프링 제본 모양 -->
+            <div class="w-full h-3 spring-binder mb-1.5 rounded-full opacity-80 shrink-0"></div>
+            
+            <!-- Canvas 컨테이너 -->
+            <div id="canvas-container" class="relative flex-1 w-full h-full bg-white rounded-xl overflow-hidden cursor-crosshair border border-gray-100">
+                <canvas id="sketchpad" class="absolute inset-0 block"></canvas>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 모달 (지우기 확인) -->
+    <div id="clear-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl p-5 max-w-xs w-full border-4 border-yellow-300 shadow-2xl text-center transform transition-all scale-95 opacity-0 duration-200" id="modal-content">
+            <div class="w-12 h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-xl font-bold font-gaegu text-gray-800 mb-1">그림을 모두 지울까요?</h3>
+            <p class="text-xs text-gray-500 mb-4">지운 그림은 다시 되돌릴 수 없어요!</p>
+            <div class="flex space-x-2">
+                <button id="modal-cancel" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-sm transition">아니오</button>
+                <button id="modal-confirm" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 rounded-xl text-sm shadow-md transition">지울래요!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const canvas = document.getElementById('sketchpad');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const container = document.getElementById('canvas-container');
+            
+            const brushSizeInput = document.getElementById('brush-size');
+            const brushSizeText = document.getElementById('brush-size-text');
+            const brushPreview = document.getElementById('brush-preview');
+            const customColorPicker = document.getElementById('custom-color-picker');
+            
+            const btnUndo = document.getElementById('btn-undo');
+            const btnRedo = document.getElementById('btn-redo');
+            const btnClear = document.getElementById('btn-clear');
+            const btnDownload = document.getElementById('btn-download');
+            const btnUpload = document.getElementById('btn-upload');
+            const imageUploadInput = document.getElementById('image-upload');
+            
+            const clearModal = document.getElementById('clear-modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalCancel = document.getElementById('modal-cancel');
+            modalConfirm = document.getElementById('modal-confirm');
+
+            let isDrawing = false;
+            let currentTool = 'pencil';
+            let currentColor = '#ef4444';
+            let currentSize = 10;
+            let lastX = 0;
+            let lastY = 0;
+
+            // 히스토리 관리
+            let history = [];
+            let historyStep = -1;
+            const MAX_HISTORY = 20;
+
+            // 크롬북 및 고해상도 디스플레이 대응 Resize & Resolution 스케일링
+            function resizeCanvas() {
+                const rect = container.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return;
+
+                // 기존 그린 오프스크린 데이터를 보존
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                if (canvas.width > 0 && canvas.height > 0) {
+                    tempCtx.drawImage(canvas, 0, 0);
+                }
+
+                // 레티나/크롬북 디스플레이 스케일링 (DPI)
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+
+                // CSS 실제 표시 크기 동기화
+                canvas.style.width = `${rect.width}px`;
+                canvas.style.height = `${rect.height}px`;
+
+                ctx.scale(dpr, dpr);
+
+                // 흰색 배경 채우기
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, rect.width, rect.height);
+
+                // 기존에 그리던 그림 다시 그리기
+                if (tempCanvas.width > 0 && tempCanvas.height > 0) {
+                    ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width / dpr, tempCanvas.height / dpr, 0, 0, rect.width, rect.height);
+                }
+
+                if (history.length === 0) {
+                    saveState();
+                }
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', debounce(() => resizeCanvas(), 150));
+
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            function saveState() {
+                if (historyStep < history.length - 1) {
+                    history = history.slice(0, historyStep + 1);
+                }
+                if (history.length >= MAX_HISTORY) {
+                    history.shift();
+                } else {
+                    historyStep++;
+                }
+                history.push(canvas.toDataURL());
+                updateUndoRedoButtons();
+            }
+
+            function updateUndoRedoButtons() {
+                btnUndo.disabled = historyStep <= 0;
+                btnRedo.disabled = historyStep >= history.length - 1;
+            }
+
+            function restoreState(step) {
+                if (step >= 0 && step < history.length) {
+                    historyStep = step;
+                    const img = new Image();
+                    img.src = history[historyStep];
+                    img.onload = () => {
+                        const rect = container.getBoundingClientRect();
+                        ctx.clearRect(0, 0, rect.width, rect.height);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, rect.width, rect.height);
+                        ctx.drawImage(img, 0, 0, rect.width, rect.height);
+                    };
+                    updateUndoRedoButtons();
+                }
+            }
+
+            // Pointer Event 좌표 계산 (Chromebook touch + stylus + mouse 통합 대응)
+            function getCoords(e) {
+                const rect = canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+
+            function startDrawing(e) {
+                if (e.button !== undefined && e.button !== 0) return; // 좌클릭/터치만 허용
+                
+                const coords = getCoords(e);
+                
+                // 페인트통 (배경채우기) 선택 시 Flood Fill 실행
+                if (currentTool === 'bucket') {
+                    floodFill(Math.round(coords.x), Math.round(coords.y), currentColor);
+                    saveState();
+                    return;
+                }
+
+                isDrawing = true;
+                lastX = coords.x;
+                lastY = coords.y;
+                draw(e);
+            }
+
+            // Hex 색상 코드를 RGBA 배열로 변환
+            function hexToRgba(hex) {
+                let c = hex.replace('#', '');
+                if (c.length === 3) {
+                    c = c.split('').map(x => x + x).join('');
+                }
+                const num = parseInt(c, 16);
+                return [
+                    (num >> 16) & 255,
+                    (num >> 8) & 255,
+                    num & 255,
+                    255
+                ];
+            }
+
+            // 영역 채우기 (Flood Fill) 함수
+            function floodFill(startX, startY, fillColorHex) {
+                const rect = container.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                
+                // Canvas 픽셀 데이터 가져오기
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+                const data = imgData.data;
+
+                // 클릭 위치를 실제 디바이스 픽셀 좌표로 환산
+                const targetX = Math.floor(startX * dpr);
+                const targetY = Math.floor(startY * dpr);
+
+                if (targetX < 0 || targetX >= canvasWidth || targetY < 0 || targetY >= canvasHeight) return;
+
+                const startPos = (targetY * canvasWidth + targetX) * 4;
+                const startR = data[startPos];
+                const startG = data[startPos + 1];
+                const startB = data[startPos + 2];
+                const startA = data[startPos + 3];
+
+                const fillRgba = hexToRgba(fillColorHex);
+
+                // 이미 같은 색상인 경우 동작 취소
+                if (
+                    Math.abs(startR - fillRgba[0]) < 10 &&
+                    Math.abs(startG - fillRgba[1]) < 10 &&
+                    Math.abs(startB - fillRgba[2]) < 10 &&
+                    Math.abs(startA - fillRgba[3]) < 10
+                ) {
+                    return;
+                }
+
+                function matchStartColor(pos) {
+                    const r = data[pos];
+                    const g = data[pos + 1];
+                    const b = data[pos + 2];
+                    const a = data[pos + 3];
+                    // 약간의 허용 오차(Tolerance) 제공 (크레파스/선 가장자리 매끄럽게 처리)
+                    return (
+                        Math.abs(r - startR) < 32 &&
+                        Math.abs(g - startG) < 32 &&
+                        Math.abs(b - startB) < 32 &&
+                        Math.abs(a - startA) < 32
+                    );
+                }
+
+                function colorPixel(pos) {
+                    data[pos] = fillRgba[0];
+                    data[pos + 1] = fillRgba[1];
+                    data[pos + 2] = fillRgba[2];
+                    data[pos + 3] = fillRgba[3];
+                }
+
+                // BFS 스택 기반 픽셀 채우기
+                const pixelStack = [[targetX, targetY]];
+
+                while (pixelStack.length > 0) {
+                    const newPos = pixelStack.pop();
+                    const x = newPos[0];
+                    let y = newPos[1];
+
+                    let pixelPos = (y * canvasWidth + x) * 4;
+
+                    while (y >= 0 && matchStartColor(pixelPos)) {
+                        y--;
+                        pixelPos -= canvasWidth * 4;
+                    }
+
+                    pixelPos += canvasWidth * 4;
+                    y++;
+
+                    let reachLeft = false;
+                    let reachRight = false;
+
+                    while (y < canvasHeight && matchStartColor(pixelPos)) {
+                        colorPixel(pixelPos);
+
+                        if (x > 0) {
+                            if (matchStartColor(pixelPos - 4)) {
+                                if (!reachLeft) {
+                                    pixelStack.push([x - 1, y]);
+                                    reachLeft = true;
+                                }
+                            } else if (reachLeft) {
+                                reachLeft = false;
+                            }
+                        }
+
+                        if (x < canvasWidth - 1) {
+                            if (matchStartColor(pixelPos + 4)) {
+                                if (!reachRight) {
+                                    pixelStack.push([x + 1, y]);
+                                    reachRight = true;
+                                }
+                            } else if (reachRight) {
+                                reachRight = false;
+                            }
+                        }
+
+                        y++;
+                        pixelPos += canvasWidth * 4;
+                    }
+                }
+
+                // 변경된 이미지 데이터 캔버스 반영
+                ctx.putImageData(imgData, 0, 0);
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+
+                const coords = getCoords(e);
+                const currentX = coords.x;
+                const currentY = coords.y;
+
+                ctx.save();
+
+                switch(currentTool) {
+                    case 'pencil':
+                        // 실제 연필(Graphite Pencil) 사각거리는 질감 구현
+                        // 연필은 설정된 두께보다 훨씬 가늘고 날카롭게 그어짐 (최대 3.5px)
+                        const pencilWidth = Math.min(Math.max(currentSize * 0.15, 1.2), 3.5);
+                        const distPencil = Math.hypot(currentX - lastX, currentY - lastY);
+                        const stepsPencil = Math.max(Math.ceil(distPencil * 1.5), 1);
+
+                        // 흑연 기본 색상 추출 및 투명도 설정
+                        ctx.fillStyle = currentColor;
+                        ctx.strokeStyle = currentColor;
+
+                        // 1. 가늘고 섬세한 메인 심 라인
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(currentX, currentY);
+                        ctx.lineWidth = pencilWidth;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.globalAlpha = 0.5;
+                        ctx.stroke();
+
+                        // 2. 종이 질감 마찰로 생기는 오돌토돌 흑연 입자 파티클 (사각거리는 연필 질감 핵심)
+                        for (let i = 0; i < stepsPencil; i++) {
+                            const lerpX = lastX + (currentX - lastX) * (i / stepsPencil);
+                            const lerpY = lastY + (currentY - lastY) * (i / stepsPencil);
+
+                            // 선 주변에 흩뿌려지는 무작위 미세 입자
+                            const particleCount = Math.floor(pencilWidth * 2.5);
+                            for (let p = 0; p < particleCount; p++) {
+                                const offsetRadius = (Math.random() - 0.5) * pencilWidth * 1.8;
+                                const angle = Math.random() * Math.PI * 2;
+                                const px = lerpX + offsetRadius * Math.cos(angle);
+                                const py = lerpY + offsetRadius * Math.sin(angle);
+
+                                ctx.globalAlpha = Math.random() * 0.45 + 0.1;
+                                // 1px 미세 점으로 흑연 입자 표현
+                                ctx.fillRect(px, py, 1, 1);
+                            }
+                        }
+                        break;
+
+                    case 'colorPencil':
+                        // 실제 색연필: 은은한 왁스 입자 질감 & 종이 텍스처 사각거림 구현
+                        const distCP = Math.hypot(currentX - lastX, currentY - lastY);
+                        const stepsCP = Math.max(Math.ceil(distCP * 2), 1);
+                        const cpRadius = currentSize / 2;
+
+                        ctx.fillStyle = currentColor;
+                        ctx.strokeStyle = currentColor;
+
+                        // 1. 은은하게 비치는 투명 붓 선 (색연필 겹쳐칠하기 효과)
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(currentX, currentY);
+                        ctx.lineWidth = currentSize * 0.7;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.globalAlpha = 0.12;
+                        ctx.stroke();
+
+                        // 2. 획을 따라 흩뿌려지는 굵고 오돌토돌한 색연필 왁스 파티클
+                        for (let i = 0; i < stepsCP; i++) {
+                            const lerpX = lastX + (currentX - lastX) * (i / stepsCP);
+                            const lerpY = lastY + (currentY - lastY) * (i / stepsCP);
+                            
+                            // 색연필 입자 density
+                            const particleCount = Math.floor(currentSize * 1.8);
+                            for (let p = 0; p < particleCount; p++) {
+                                // 원형 범위 내 불규칙한 분포
+                                const r = Math.sqrt(Math.random()) * cpRadius;
+                                const theta = Math.random() * Math.PI * 2;
+                                const px = lerpX + r * Math.cos(theta);
+                                const py = lerpY + r * Math.sin(theta);
+
+                                // 입자의 오돌토돌한 크기 (1.2 ~ 2.2px)
+                                const dotSize = Math.random() * 1.0 + 1.2;
+                                // 색연필 특유의 부분적 농도 차이 (사각거림)
+                                ctx.globalAlpha = Math.random() * 0.35 + 0.15;
+                                ctx.fillRect(px, py, dotSize, dotSize);
+                            }
+                        }
+                        break;
+
+                    case 'marker':
+                        // 싸인펜: 또렷하고 진한 발색
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(currentX, currentY);
+                        ctx.strokeStyle = currentColor;
+                        ctx.lineWidth = currentSize;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.globalAlpha = 0.95;
+                        ctx.stroke();
+                        break;
+
+                    case 'crayon':
+                        // 크레파스: 거칠거칠 오돌토돌 텍스처
+                        const distCr = Math.hypot(currentX - lastX, currentY - lastY);
+                        const stepsCr = Math.max(Math.ceil(distCr / 2), 1);
+                        ctx.fillStyle = currentColor;
+
+                        for (let i = 0; i < stepsCr; i++) {
+                            const lerpX = lastX + (currentX - lastX) * (i / stepsCr);
+                            const lerpY = lastY + (currentY - lastY) * (i / stepsCr);
+                            const count = Math.floor(currentSize * 2.5);
+
+                            for (let j = 0; j < count; j++) {
+                                const radius = (Math.random() * currentSize) / 2;
+                                const angle = Math.random() * Math.PI * 2;
+                                const px = lerpX + radius * Math.cos(angle);
+                                const py = lerpY + radius * Math.sin(angle);
+                                const dotSize = Math.random() * 2 + 1;
+
+                                ctx.globalAlpha = Math.random() * 0.7 + 0.3;
+                                ctx.fillRect(px, py, dotSize, dotSize);
+                            }
+                        }
+                        break;
+
+                    case 'oilPaint':
+                        // 유화붓 (Oil Paint): 붓모의 결(Bristle)과 입체적인 꾸덕함 구현
+                        const angleOil = Math.atan2(currentY - lastY, currentX - lastX);
+                        const perpAngle = angleOil + Math.PI / 2;
+                        const bristles = Math.max(Math.floor(currentSize * 0.8), 6);
+
+                        // 1. 붓물감 베이스 레이어 (진하고 부드러운 유화 베이스)
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(currentX, currentY);
+                        ctx.strokeStyle = currentColor;
+                        ctx.lineWidth = currentSize;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.globalAlpha = 0.85;
+                        ctx.stroke();
+
+                        // 2. 붓 결(Bristles) 및 입체감(하이라이트/음영) 표현
+                        for (let i = 0; i < bristles; i++) {
+                            const offset = ((i / (bristles - 1)) - 0.5) * (currentSize * 0.85);
+                            const ox = Math.cos(perpAngle) * offset;
+                            const oy = Math.sin(perpAngle) * offset;
+
+                            ctx.beginPath();
+                            ctx.moveTo(lastX + ox, lastY + oy);
+                            ctx.lineTo(currentX + ox, currentY + oy);
+                            ctx.lineWidth = Math.max(currentSize / bristles * 1.2, 1.2);
+                            ctx.lineCap = 'round';
+
+                            if (i % 3 === 0) {
+                                // 물감의 도톰한 빛 반사(하이라이트)
+                                ctx.strokeStyle = '#ffffff';
+                                ctx.globalAlpha = 0.22;
+                            } else if (i % 4 === 1) {
+                                // 붓 자국 깊은 골(음영)
+                                ctx.strokeStyle = '#000000';
+                                ctx.globalAlpha = 0.14;
+                            } else {
+                                // 본연의 진한 유화 물감 결
+                                ctx.strokeStyle = currentColor;
+                                ctx.globalAlpha = 0.9;
+                            }
+                            ctx.stroke();
+                        }
+                        break;
+
+                    case 'watercolor':
+                        // 수채화붓 (Watercolor): 맑고 투명한 물감 겹침 및 촉촉한 물번짐 효과
+                        const distWC = Math.hypot(currentX - lastX, currentY - lastY);
+                        const stepsWC = Math.max(Math.ceil(distWC / 2.5), 1);
+
+                        // 1. 부드럽게 퍼지는 물번짐 외곽 효과
+                        ctx.shadowColor = currentColor;
+                        ctx.shadowBlur = currentSize * 0.6;
+                        ctx.fillStyle = currentColor;
+
+                        for (let i = 0; i < stepsWC; i++) {
+                            const lerpX = lastX + (currentX - lastX) * (i / stepsWC);
+                            const lerpY = lastY + (currentY - lastY) * (i / stepsWC);
+
+                            // 물방울이 종이에 스며들듯 반투명한 원형 번짐을 여러 겹 레이어링
+                            const layers = 3;
+                            for (let l = 0; l < layers; l++) {
+                                const jitterX = (Math.random() - 0.5) * (currentSize * 0.3);
+                                const jitterY = (Math.random() - 0.5) * (currentSize * 0.3);
+                                const radius = (currentSize * 0.5) * (0.75 + Math.random() * 0.45);
+
+                                ctx.beginPath();
+                                ctx.arc(lerpX + jitterX, lerpY + jitterY, radius, 0, Math.PI * 2);
+                                ctx.globalAlpha = 0.045; // 맑고 투명한 수채화 농도
+                                ctx.fill();
+                            }
+                        }
+
+                        // 2. 물감이 고이는 테두리(Water Edge) 느낌을 살리는 은은한 중심선
+                        ctx.shadowBlur = 0;
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(currentX, currentY);
+                        ctx.strokeStyle = currentColor;
+                        ctx.lineWidth = currentSize * 0.85;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.globalAlpha = 0.08;
+                        ctx.stroke();
+                        break;
+
+                    case 'eraser':
+                        // 지우개: 흰색으로 지우기
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(currentX, currentY);
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = currentSize * 1.5;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.globalAlpha = 1.0;
+                        ctx.stroke();
+                        break;
+                }
+
+                ctx.restore();
+
+                lastX = currentX;
+                lastY = currentY;
+            }
+
+            function stopDrawing() {
+                if (isDrawing) {
+                    isDrawing = false;
+                    saveState();
+                }
+            }
+
+            // Pointer 이벤트 바인딩 (마우스, 터치, 크롬북 펜 지원)
+            canvas.addEventListener('pointerdown', startDrawing);
+            canvas.addEventListener('pointermove', draw);
+            canvas.addEventListener('pointerup', stopDrawing);
+            canvas.addEventListener('pointerleave', stopDrawing);
+            canvas.addEventListener('pointercancel', stopDrawing);
+
+            // 도구 버튼 이벤트 핸들러
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    const targetBtn = e.currentTarget;
+                    targetBtn.classList.add('active');
+                    currentTool = targetBtn.dataset.tool;
+                });
+            });
+
+            // 브러시 크기 슬라이더 이벤트
+            brushSizeInput.addEventListener('input', (e) => {
+                currentSize = parseInt(e.target.value);
+                brushSizeText.textContent = `${currentSize}px`;
+                brushPreview.style.width = `${Math.min(currentSize, 28)}px`;
+                brushPreview.style.height = `${Math.min(currentSize, 28)}px`;
+            });
+
+            // 색상 팔레트 이벤트
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.color-btn').forEach(b => {
+                        b.classList.remove('active', 'ring-2', 'ring-gray-400');
+                    });
+                    const targetBtn = e.currentTarget;
+                    targetBtn.classList.add('active', 'ring-2', 'ring-gray-400');
+                    currentColor = targetBtn.dataset.color;
+                    customColorPicker.value = currentColor;
+                    brushPreview.style.backgroundColor = currentColor;
+                });
+            });
+
+            // 커스텀 색상 피커 이벤트
+            customColorPicker.addEventListener('input', (e) => {
+                currentColor = e.target.value;
+                brushPreview.style.backgroundColor = currentColor;
+                document.querySelectorAll('.color-btn').forEach(b => {
+                    b.classList.remove('active', 'ring-2', 'ring-gray-400');
+                });
+            });
+
+            // Undo / Redo 버튼 이벤트
+            btnUndo.addEventListener('click', () => {
+                if (historyStep > 0) {
+                    restoreState(historyStep - 1);
+                }
+            });
+
+            btnRedo.addEventListener('click', () => {
+                if (historyStep < history.length - 1) {
+                    restoreState(historyStep + 1);
+                }
+            });
+
+            // 캔버스 모두 지우기 커스텀 모달
+            btnClear.addEventListener('click', () => {
+                clearModal.classList.remove('hidden');
+                clearModal.classList.add('flex');
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            });
+
+            function closeModal() {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    clearModal.classList.remove('flex');
+                    clearModal.classList.add('hidden');
+                }, 200);
+            }
+
+            modalCancel.addEventListener('click', closeModal);
+
+            modalConfirm.addEventListener('click', () => {
+                closeModal();
+                const rect = container.getBoundingClientRect();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, rect.width, rect.height);
+                saveState();
+            });
+
+            // 완성한 작품 다운로드 (PNG 이미지)
+            btnDownload.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.download = `월평초-3학년1반-스케치북-${new Date().toISOString().slice(0, 10)}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+
+            // 이미지(사진) 업로드하여 스케치북에 배치하기
+            btnUpload.addEventListener('click', () => {
+                imageUploadInput.click();
+            });
+
+            imageUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const rect = container.getBoundingClientRect();
+                        
+                        // 스케치북 비율에 맞춰 이미지가 잘리지 않고 중앙에 예쁘게 들어가도록 계산
+                        const scale = Math.min(rect.width / img.width, rect.height / img.height);
+                        const drawWidth = img.width * scale;
+                        const drawHeight = img.height * scale;
+                        const offsetX = (rect.width - drawWidth) / 2;
+                        const offsetY = (rect.height - drawHeight) / 2;
+
+                        // 배경을 흰색으로 초기화한 뒤 사진 그리기
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, rect.width, rect.height);
+                        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+                        // Undo/Redo 히스토리에 저장하여 사진 위에 그린 그림만 되돌릴 수 있게 처리
+                        saveState();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+                // 같은 사진을 다시 불러올 수 있도록 input 초기화
+                e.target.value = '';
+            });
+        };
+    </script>
+</body>
+</html>
